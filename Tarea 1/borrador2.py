@@ -1,11 +1,9 @@
 import time
 
-# Datos del problema
 comunas = list(range(1, 16))  # Comunas 1 a 15
 costos = {1: 60, 2: 30, 3: 60, 4: 70, 5: 130, 6: 60, 7: 70, 8: 60, 9: 80, 
-          10: 70, 11: 50, 12: 90, 13: 30, 14: 30, 15: 100}
+        10: 70, 11: 50, 12: 90, 13: 30, 14: 30, 15: 100}
 
-# Matriz de cobertura completa (supuesta basada en el texto y lógica razonable)
 cobertura = {
     1: [1, 2, 3, 4, 13], 2: [1, 2, 4, 12, 15], 3: [1, 3, 4, 13], 4: [1, 2, 3, 4, 5, 12],
     5: [3, 4, 5, 6, 7, 8, 9, 12], 6: [3, 5, 6, 9], 7: [5, 7, 8, 10, 11, 12, 14, 15], 8: [5, 7, 8, 9, 10],
