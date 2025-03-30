@@ -1,4 +1,5 @@
 import time
+import matplotlib.pyplot as plt
 
 comunas = list(range(1, 16))  # Comunas 1 a 15
 costos = {1: 60, 2: 30, 3: 60, 4: 70, 5: 130, 6: 60, 7: 70, 8: 60, 9: 80, 
@@ -113,6 +114,24 @@ historial_heuristico = []
 inicio = time.time()
 resolver_heuristico(comunas, [], mejor_solucion_heuristico, 0, historial_heuristico)
 tiempo_heuristico = time.time() - inicio
+
+# Gráfica de evolución del costo
+def plot_historial(historial, label):
+    if historial:
+        tiempos = [t - historial[0][0] for t, c in historial]
+        costos = [c for t, c in historial]
+        plt.plot(tiempos, costos, marker='o', linestyle='-', label=label)
+
+plt.figure(figsize=(10, 5))
+plot_historial(historial_completo, "Técnica Completa")
+plot_historial(historial_heuristico, "Variante con Heurística")
+
+plt.xlabel("Tiempo (segundos)")
+plt.ylabel("Costo")
+plt.title("Evolución del costo en función del tiempo")
+plt.legend()
+plt.grid()
+plt.show()
 
 # Resultados
 print("Técnica Completa (Forward-checking):")
