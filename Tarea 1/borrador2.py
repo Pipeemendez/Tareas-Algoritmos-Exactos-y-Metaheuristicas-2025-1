@@ -31,7 +31,7 @@ def forward_check(solucion_parcial, comunas_restantes):
             return True
     return False
 
-# Técnica completa con forward-checking
+# busqueda completa con forward-checking
 def resolver_completo(comunas_restantes, solucion_parcial, mejor_solucion, costo_actual, historial):
     global mejor_costo
     if verificar_todas_cubiertas(solucion_parcial, comunas):
@@ -48,17 +48,17 @@ def resolver_completo(comunas_restantes, solucion_parcial, mejor_solucion, costo
     comuna = comunas_restantes[0]
     resto = comunas_restantes[1:]
     
-    # Incluir la comuna actual
+    # incluir la comuna actual
     solucion_parcial.append(comuna)
     if forward_check(solucion_parcial, resto):
         resolver_completo(resto, solucion_parcial, mejor_solucion, costo_actual + costos[comuna], historial)
     solucion_parcial.pop()
     
-    # No incluir la comuna actual
+    # no incluir la comuna actual
     if forward_check(solucion_parcial, resto):
         resolver_completo(resto, solucion_parcial, mejor_solucion, costo_actual, historial)
 
-# Heurística: seleccionar comuna que cubre MAS comunas a menor costo
+# heurística: seleccionar comuna que cubre MAS comunas a menor costo
 def heuristica(comunas_restantes, solucion_parcial):
     cubiertas = set()
     for comuna in solucion_parcial:
@@ -72,7 +72,7 @@ def heuristica(comunas_restantes, solucion_parcial):
             key=lambda c: len(set(cobertura[c]) & no_cubiertas) / costos[c], 
             default=None)
 
-# Variante con heurística greedy + backtracking
+# variante con heurística greedy + backtracking
 def resolver_heuristico(comunas_restantes, solucion_parcial, mejor_solucion, costo_actual, historial):
     global mejor_costo
     if verificar_todas_cubiertas(solucion_parcial, comunas):
@@ -91,17 +91,17 @@ def resolver_heuristico(comunas_restantes, solucion_parcial, mejor_solucion, cos
         return
     resto = [c for c in comunas_restantes if c != comuna]
     
-    # Incluir la comuna actual
+    # incluir la comuna actual
     solucion_parcial.append(comuna)
     if forward_check(solucion_parcial, resto):
         resolver_heuristico(resto, solucion_parcial, mejor_solucion, costo_actual + costos[comuna], historial)
     solucion_parcial.pop()
     
-    # No incluir la comuna actual
+    # no incluir la comuna actual
     if forward_check(solucion_parcial, resto):
         resolver_heuristico(resto, solucion_parcial, mejor_solucion, costo_actual, historial)
 
-# Ejecución
+# ejecutar todo
 mejor_costo = float('inf')
 mejor_solucion_completo = []
 historial_completo = []
@@ -116,7 +116,7 @@ inicio = time.time()
 resolver_heuristico(comunas, [], mejor_solucion_heuristico, 0, historial_heuristico)
 tiempo_heuristico = time.time() - inicio
 
-# Gráfica de evolución del costo
+# graficar la evolución del costo en el tiempo
 def graficar_historial(historial, label):
     if historial:
         tiempos = [t - historial[0][0] for t, c in historial]
@@ -124,7 +124,7 @@ def graficar_historial(historial, label):
         plt.plot(tiempos, costos, marker='o', linestyle='-', label=label)
 
 plt.figure(figsize=(10, 5))
-graficar_historial(historial_completo, "Técnica Completa")
+graficar_historial(historial_completo, "Búsqueda Completa")
 graficar_historial(historial_heuristico, "Variante con Heurística")
 
 plt.xlabel("Tiempo (segundos)")
@@ -134,8 +134,8 @@ plt.legend()
 plt.grid()
 plt.show()
 
-# Resultados
-print("Técnica Completa (Forward-checking):")
+# resultados
+print("Búsqueda Completa (Forward-checking):")
 print(f"Solución: {mejor_solucion_completo}")
 print(f"Costo: {sum(costos[c] for c in mejor_solucion_completo)}")
 print(f"Tiempo: {tiempo_completo:.4f} segundos")
