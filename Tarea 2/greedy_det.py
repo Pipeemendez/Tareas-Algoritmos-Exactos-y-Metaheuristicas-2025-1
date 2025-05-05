@@ -12,38 +12,21 @@ print("Tiempos de separación del segundo avión:", matriz[1]) """
 
 #greedy determinista
 def greedy_determinista(D, aviones, matriz_tiempos):
-    """
-    Implementación del algoritmo Greedy Determinista para el problema de aterrizaje de aviones.
-
-    Args:
-        D (int): Número de aviones.
-        aviones (list): Lista de diccionarios, donde cada diccionario representa un avión
-                      y contiene sus tiempos de aterrizaje y penalizaciones.
-        matriz_tiempos (list of list): Matriz de tiempos de separación entre aviones.
-
-    Returns:
-        tuple: Una tupla que contiene la secuencia de aterrizaje y el costo total.
-    """
-
-    secuencia_aterrizaje = []
-    tiempos_aterrizaje = [0] * D
+    secuencia_aterrizaje_indices = []
+    tiempos_aterrizaje_programados = [0] * D
     costo_total = 0
 
-    # Inicializar tiempos de aterrizaje con el tiempo más temprano
-    for i in range(D):
-        tiempos_aterrizaje[i] = aviones[i]['t_temprano']
-    
     for _ in range(D):
-        mejor_avion = -1
+        mejor_avion_indice = -1
         mejor_costo = float('inf')
+        tiempo_aterrizaje_seleccionado = -1
 
         for i in range(D):
-            if i not in secuencia_aterrizaje:
-                # Calcular el tiempo de aterrizaje factible más temprano
+            if i not in secuencia_aterrizaje_indices:
+                # Calcular el tiempo factible más temprano considerando todos los aviones programados
                 tiempo_factible = aviones[i]['t_temprano']
-                if secuencia_aterrizaje:
-                    tiempo_factible = max(tiempo_factible, max(tiempos_aterrizaje[j] + matriz_tiempos[j][i] 
-                                            for j in secuencia_aterrizaje))
+                for prev_idx in secuencia_aterrizaje_indices:
+                    tiempo_factible = max(tiempo_factible, tiempos_aterrizaje_programados[prev_idx] + matriz_tiempos[prev_idx][i])
 
                 # Si el tiempo factible está dentro del rango permitido
                 if tiempo_factible <= aviones[i]['t_tarde']:
@@ -57,38 +40,57 @@ def greedy_determinista(D, aviones, matriz_tiempos):
 
                     if costo < mejor_costo:
                         mejor_costo = costo
-                        mejor_avion = i
-        
-        if mejor_avion == -1:
-            # No se encontró un avión factible, se fuerza a aterrizar el primero disponible dentro de lo posible
+                        mejor_avion_indice = i
+                        tiempo_aterrizaje_seleccionado = tiempo_factible
+
+        if mejor_avion_indice == -1:
+            # No se encontró un avión factible, forzar la selección del primero disponible
             for i in range(D):
-                if i not in secuencia_aterrizaje:
+                if i not in secuencia_aterrizaje_indices:
                     tiempo_factible = aviones[i]['t_temprano']
-                    if secuencia_aterrizaje:
-                        tiempo_factible = max(tiempo_factible, max(tiempos_aterrizaje[j] + matriz_tiempos[j][i] 
-                                                for j in secuencia_aterrizaje))
-                    tiempo_factible = min(tiempo_factible, aviones[i]['t_tarde']) # Asegurar que no se pase del límite tardío
-                    
+                    for prev_idx in secuencia_aterrizaje_indices:
+                        tiempo_factible = max(tiempo_factible, tiempos_aterrizaje_programados[prev_idx] + matriz_tiempos[prev_idx][i])
+                    tiempo_factible = min(tiempo_factible, aviones[i]['t_tarde'])
+
                     costo = 0
                     if tiempo_factible < aviones[i]['t_pref']:
                         costo += aviones[i]['pena_temprano'] * (aviones[i]['t_pref'] - tiempo_factible)
                     elif tiempo_factible > aviones[i]['t_pref']:
                         costo += aviones[i]['pena_tarde'] * (tiempo_factible - aviones[i]['t_pref'])
-                    
-                    mejor_costo = costo
-                    mejor_avion = i
-                    break  # Tomar el primer avión disponible
 
-        secuencia_aterrizaje.append(mejor_avion)
-        tiempos_aterrizaje[mejor_avion] = tiempo_factible
+                    mejor_costo = costo
+                    mejor_avion_indice = i
+                    tiempo_aterrizaje_seleccionado = tiempo_factible
+                    break
+
+        secuencia_aterrizaje_indices.append(mejor_avion_indice)
+        tiempos_aterrizaje_programados[mejor_avion_indice] = tiempo_aterrizaje_seleccionado
         costo_total += mejor_costo
 
-    return secuencia_aterrizaje, costo_total
+    # Crear la secuencia de aviones en el orden de aterrizaje
+    secuencia_aterrizaje_ordenada = [secuencia_aterrizaje_indices[i] for i in range(D)]
+
+    # Crear la lista de tiempos de aterrizaje en el orden de la secuencia
+    tiempos_aterrizaje_ordenados = [tiempos_aterrizaje_programados[i] for i in secuencia_aterrizaje_indices]
+
+    return secuencia_aterrizaje_ordenada, costo_total, tiempos_aterrizaje_ordenados
 
 if __name__ == '__main__':
-    # Ejemplo de uso (asumiendo que ya tienes la función leer_datos_archivo)
-    D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")  # Reemplaza con el nombre de tu archivo
+    D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")
 
     # Greedy Determinista
-    secuencia_det, costo_det = greedy_determinista(D, aviones, matriz_tiempos)
-    print("Greedy Determinista - Secuencia:", secuencia_det, "Costo:", costo_det)
+    secuencia_det_ordenada, costo_det, tiempos_det_ordenados = greedy_determinista(D, aviones, matriz_tiempos)
+    print("Greedy Determinista - Secuencia:", secuencia_det_ordenada, ", Costo:", costo_det, ", Tiempos de Aterrizaje (ordenados):", tiempos_det_ordenados)
+
+    # Verificar tiempos de separación
+    for i in range(len(secuencia_det_ordenada) - 1):
+        avion1_index = secuencia_det_ordenada[i]
+        avion2_index = secuencia_det_ordenada[i+1]
+        tiempo_aterrizaje1 = tiempos_det_ordenados[i]
+        tiempo_aterrizaje2 = tiempos_det_ordenados[i+1]
+        tiempo_separacion = matriz_tiempos[avion1_index][avion2_index]
+        if tiempo_aterrizaje2 < tiempo_aterrizaje1 + tiempo_separacion:
+            print(f"¡Advertencia! El tiempo de separación entre el avión {avion1_index} y el avión {avion2_index} no se cumple.")
+            print(f"  Avión {avion1_index} aterriza en: {tiempo_aterrizaje1}")
+            print(f"  Avión {avion2_index} aterriza en: {tiempo_aterrizaje2}")
+            print(f"  Tiempo de separación requerido: {tiempo_separacion}")
