@@ -1,6 +1,7 @@
 import random
 from greedy_det import greedy_determinista
 from greedy_est import greedy_estocastico
+from leer_data import leer_datos_archivo
 
 def calcular_costo(secuencia, aviones, matriz_tiempos):
     costo_total = 0
@@ -115,7 +116,6 @@ def tabu_search_main(D, aviones, matriz_tiempos, tenure=5, max_iter=100, max_ite
     return mejor_solucion_global, mejor_costo_global
 
 if __name__ == '__main__':
-    from leer_data import leer_datos_archivo
     D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")
     configuraciones = [
         {"tenure": 5, "max_iter": 100, "max_iter_sin_mejora": 50, "num_seeds_estocastico": 10, "num_restarts_estocastico": 5},
