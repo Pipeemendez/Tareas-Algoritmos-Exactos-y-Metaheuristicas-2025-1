@@ -2,20 +2,6 @@ import random
 from leer_data import leer_datos_archivo
 
 def greedy_estocastico(D, aviones, matriz_tiempos, seed):
-    """
-    Implementación del algoritmo Greedy Estocástico para el problema de aterrizaje de aviones.
-
-    Args:
-        D (int): Número de aviones.
-        aviones (list): Lista de diccionarios, donde cada diccionario representa un avión
-                      y contiene sus tiempos de aterrizaje y penalizaciones.
-        matriz_tiempos (list of list): Matriz de tiempos de separación entre aviones.
-        seed (int): Semilla para la generación de números aleatorios.
-
-    Returns:
-        tuple: Una tupla que contiene la secuencia de aterrizaje y el costo total.
-    """
-
     random.seed(seed)
     secuencia_aterrizaje = []
     tiempos_aterrizaje = [0] * D
