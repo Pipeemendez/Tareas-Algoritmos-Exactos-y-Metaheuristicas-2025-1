@@ -1,9 +1,11 @@
 from leer_data import leer_datos_archivo
+from greedy_det import greedy_determinista
+from greedy_est import greedy_estocastico
 import random
 import copy
 
 def calcular_costo(secuencia, aviones, matriz_tiempos):
-    """Calcula el costo total de una secuencia de aterrizajes."""
+    """Calcula el costo total de una secuencia de aterrizajes, consistente con los greedy."""
     costo_total = 0
     tiempos_aterrizaje = [0] * len(secuencia)
 
@@ -11,20 +13,23 @@ def calcular_costo(secuencia, aviones, matriz_tiempos):
         avion = aviones[avion_idx]
         tiempo_minimo = avion['t_temprano']
 
-        if i > 0:
-            tiempo_minimo = max(tiempo_minimo, tiempos_aterrizaje[secuencia[i-1]] + matriz_tiempos[secuencia[i-1]][avion_idx])
+        # Considerar tiempos de separación con todos los aviones previos, como en los greedy
+        for j in range(i):
+            prev_avion_idx = secuencia[j]
+            tiempo_minimo = max(tiempo_minimo, tiempos_aterrizaje[prev_avion_idx] + matriz_tiempos[prev_avion_idx][avion_idx])
 
-        tiempo_aterrizaje = max(tiempo_minimo, avion['t_pref'])
+        tiempo_aterrizaje = tiempo_minimo
+        # Asegurar que el tiempo esté dentro de [t_temprano, t_tarde]
+        if tiempo_aterrizaje > avion['t_tarde']:
+            return float('inf')
+        tiempo_aterrizaje = min(tiempo_aterrizaje, avion['t_tarde'])
         tiempos_aterrizaje[avion_idx] = tiempo_aterrizaje
 
+        # Calcular penalizaciones de manera consistente con los greedy
         if tiempo_aterrizaje < avion['t_pref']:
             costo_total += (avion['t_pref'] - tiempo_aterrizaje) * avion['pena_temprano']
         elif tiempo_aterrizaje > avion['t_pref']:
             costo_total += (tiempo_aterrizaje - avion['t_pref']) * avion['pena_tarde']
-
-        # Asegurar que se cumpla el tiempo máximo de aterrizaje
-        if tiempo_aterrizaje > avion['t_tarde']:
-            return float('inf') # Solución inválida
 
     return costo_total
 
@@ -39,6 +44,7 @@ def hill_climbing_alguna_mejora(solucion_inicial, aviones, matriz_tiempos, max_i
     """Implementación del algoritmo Hill Climbing con la estrategia de alguna mejora."""
     mejor_solucion = list(solucion_inicial)
     mejor_costo = calcular_costo(mejor_solucion, aviones, matriz_tiempos)
+    costo_inicial = mejor_costo  # Guardar el costo inicial para verificación
 
     for _ in range(max_iter_local):
         vecino = generar_vecino_intercambio(mejor_solucion)
@@ -47,45 +53,68 @@ def hill_climbing_alguna_mejora(solucion_inicial, aviones, matriz_tiempos, max_i
         if costo_vecino < mejor_costo:
             mejor_solucion = vecino
             mejor_costo = costo_vecino
-            return mejor_solucion, mejor_costo # Retorna la primera mejora encontrada
+            print(f"    Hill Climbing: Mejora encontrada - Costo inicial={costo_inicial}, Nuevo costo={mejor_costo}")
+            return mejor_solucion, mejor_costo
+
+    # Verificación: asegurar que el costo no sea mayor que el inicial
+    if mejor_costo > costo_inicial:
+        print(f"    ¡Error! Hill Climbing retornó costo mayor: Inicial={costo_inicial}, Retornado={mejor_costo}")
+        mejor_costo = costo_inicial
+        mejor_solucion = list(solucion_inicial)
 
     return mejor_solucion, mejor_costo
 
-def grasp_alguna_mejora(D, aviones, matriz_tiempos, max_iter_local=100, num_restarts_estocastico=5):
-    """Implementación del algoritmo GRASP con Hill Climbing (alguna mejora) y reinicios."""
+def grasp_alguna_mejora(D, aviones, matriz_tiempos, num_seeds_estocastico=10, max_iter_local=100, num_restarts_estocastico=5):
+    """Implementación del algoritmo GRASP con Hill Climbing (alguna mejora) usando soluciones de greedy determinista y estocástico."""
     mejor_solucion_global = None
     mejor_costo_global = float('inf')
 
-    # 1. Usar el greedy determinista como punto de partida (un solo "reinicio")
-    solucion_greedy_det = [0, 1, 11, 10, 14, 12, 13, 9, 8, 6, 5, 7, 4, 3, 2] # Reemplaza con tu función greedy determinista si es diferente
-    costo_greedy_det = calcular_costo(solucion_greedy_det, aviones, matriz_tiempos)
-    solucion_local_det, costo_local_det = hill_climbing_alguna_mejora(solucion_greedy_det, aviones, matriz_tiempos, max_iter_local)
+    # 1. Obtener la solución del greedy determinista
+    secuencia_greedy_det, costo_greedy_det, _ = greedy_determinista(D, aviones, matriz_tiempos)
+    print(f"Greedy Determinista: Costo = {costo_greedy_det}, Secuencia = {secuencia_greedy_det}")
+    # Verificar costo con calcular_costo
+    costo_verificado = calcular_costo(secuencia_greedy_det, aviones, matriz_tiempos)
+    print(f"  Verificación: Costo calculado con calcular_costo = {costo_verificado}")
+    if costo_verificado != costo_greedy_det:
+        print(f"  ¡Advertencia! Costo inconsistente: Greedy={costo_greedy_det}, Calcular_costo={costo_verificado}")
+    # Comparar costo inicial del greedy determinista
+    if costo_greedy_det < mejor_costo_global:
+        mejor_costo_global = costo_greedy_det
+        mejor_solucion_global = list(secuencia_greedy_det)
+        print(f"  Actualización: Nueva mejor solución global (Greedy Determinista) - Costo = {mejor_costo_global}")
+
+    # Aplicar Hill Climbing a la solución determinista
+    solucion_local_det, costo_local_det = hill_climbing_alguna_mejora(secuencia_greedy_det, aviones, matriz_tiempos, max_iter_local)
+    print(f"GRASP (alguna mejora) - Inicial (Greedy Determinista): Costo = {costo_local_det}, Secuencia = {solucion_local_det}")
     if costo_local_det < mejor_costo_global:
         mejor_costo_global = costo_local_det
-        mejor_solucion_global = solucion_local_det
-    print(f"GRASP (alguna mejora) - Inicial (Greedy Determinista): Costo = {costo_local_det}, Secuencia = {solucion_local_det}")
+        mejor_solucion_global = list(solucion_local_det)
+        print(f"  Actualización: Nueva mejor solución global (Hill Climbing Determinista) - Costo = {mejor_costo_global}")
 
-    # 2. Usar las soluciones del greedy estocástico como puntos de partida con múltiples reinicios del Hill Climbing
-    soluciones_greedy_estocastico = [
-        [13, 6, 14, 7, 0, 5, 12, 11, 4, 3, 9, 8, 10, 1, 2],
-        [2, 10, 14, 1, 6, 3, 12, 13, 7, 11, 8, 4, 0, 9, 5],
-        [13, 14, 0, 2, 3, 8, 5, 9, 6, 11, 4, 1, 12, 7, 10],
-        [3, 10, 9, 2, 7, 14, 12, 1, 8, 0, 11, 6, 13, 4, 5],
-        [3, 5, 1, 14, 9, 11, 4, 2, 0, 6, 12, 10, 7, 8, 13],
-        [9, 4, 13, 6, 14, 11, 0, 12, 10, 2, 1, 5, 3, 8, 7],
-        [12, 9, 1, 8, 5, 0, 2, 6, 13, 11, 10, 7, 4, 3, 14],
-        [5, 2, 8, 13, 0, 3, 14, 4, 7, 11, 1, 9, 6, 10, 12],
-        [3, 6, 8, 2, 5, 0, 4, 9, 7, 13, 10, 14, 12, 1, 11],
-        [7, 10, 5, 4, 2, 3, 0, 12, 11, 9, 14, 1, 8, 6, 13]
-    ]
-    for i, solucion_inicial in enumerate(soluciones_greedy_estocastico):
-        print(f"\n--- Resultados GRASP (alguna mejora) - Inicial (Greedy Estocástico {i+1}) ---")
+    # 2. Generar múltiples soluciones iniciales con el greedy estocástico y aplicar Hill Climbing con reinicios
+    print(f"\n--- Resultados GRASP (alguna mejora) - Iniciales (Greedy Estocástico) ---")
+    for i in range(num_seeds_estocastico):
+        secuencia_greedy_estoc, costo_greedy_estoc, _ = greedy_estocastico(D, aviones, matriz_tiempos, seed=i)
+        print(f"\n  Seed = {i} - Solución Greedy Estocástica: Costo = {costo_greedy_estoc}, Secuencia = {secuencia_greedy_estoc}")
+        # Verificar costo con calcular_costo
+        costo_verificado = calcular_costo(secuencia_greedy_estoc, aviones, matriz_tiempos)
+        print(f"    Verificación: Costo calculado con calcular_costo = {costo_verificado}")
+        if costo_verificado != costo_greedy_estoc:
+            print(f"    ¡Advertencia! Costo inconsistente: Greedy={costo_greedy_estoc}, Calcular_costo={costo_verificado}")
+        # Comparar costo inicial del greedy estocástico
+        if costo_greedy_estoc < mejor_costo_global:
+            mejor_costo_global = costo_greedy_estoc
+            mejor_solucion_global = list(secuencia_greedy_estoc)
+            print(f"    Actualización: Nueva mejor solución global (Greedy Estocástico, Seed={i}) - Costo = {mejor_costo_global}")
+
         for restart in range(num_restarts_estocastico):
-            solucion_local, costo_local = hill_climbing_alguna_mejora(solucion_inicial, aviones, matriz_tiempos, max_iter_local)
-            print(f"  Reinicio {restart+1}: Costo = {costo_local}, Secuencia = {solucion_local}")
-            if costo_local < mejor_costo_global:
-                mejor_costo_global = costo_local
-                mejor_solucion_global = solucion_local
+            # Usar siempre la solución inicial estocástica para cada reinicio
+            solucion_local_estoc, costo_local_estoc = hill_climbing_alguna_mejora(secuencia_greedy_estoc, aviones, matriz_tiempos, max_iter_local)
+            print(f"    Reinicio {restart+1}: Costo = {costo_local_estoc}, Secuencia = {solucion_local_estoc}")
+            if costo_local_estoc < mejor_costo_global:
+                mejor_costo_global = costo_local_estoc
+                mejor_solucion_global = list(solucion_local_estoc)
+                print(f"    Actualización: Nueva mejor solución global (Hill Climbing Estocástico, Seed={i}, Reinicio={restart+1}) - Costo = {mejor_costo_global}")
 
     print("\n--- Resultados Finales GRASP (Hill Climbing - Alguna Mejora) ---")
     print(f"Mejor secuencia encontrada: {mejor_solucion_global}")
@@ -93,7 +122,8 @@ def grasp_alguna_mejora(D, aviones, matriz_tiempos, max_iter_local=100, num_rest
 
     return mejor_solucion_global, mejor_costo_global
 
-D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")
+if __name__ == '__main__':
+    D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")
 
-# --- Ejecutar GRASP con Hill Climbing (alguna mejora) ---
-mejor_secuencia_am, mejor_costo_am = grasp_alguna_mejora(D, aviones, matriz_tiempos)
+    # Ejecutar GRASP con Hill Climbing (alguna mejora)
+    mejor_secuencia_am, mejor_costo_am = grasp_alguna_mejora(D, aviones, matriz_tiempos)
