@@ -12,6 +12,7 @@
   <ul>
     <li>
       <a href="https://github.com/Pipeemendez/Tareas-Algoritmos-Exactos-y-Metaheuristicas-2025-1/tree/main/Tarea%201"> <p> Tarea 1: La temida influenza</p> </a>
+      <a href="https://github.com/Pipeemendez/Tareas-Algoritmos-Exactos-y-Metaheuristicas-2025-1/tree/main/Tarea%201"> <p> Tarea 2: Aterrizaje de aviones</p> </a>
     </li>
   </ul>
 </div>
