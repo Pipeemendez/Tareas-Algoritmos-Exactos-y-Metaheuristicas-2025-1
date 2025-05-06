@@ -3,8 +3,8 @@ from greedy_est import greedy_estocastico
 from leer_data import leer_datos_archivo
 from HC_alguna_mejora import generar_vecino_intercambio, calcular_costo
 
+#para mejorar una sol
 def tabu_search(solucion_inicial, aviones, matriz_tiempos, tenure=5, max_iter=100, max_iter_sin_mejora=50):
-    """Implementación de Tabu Search."""
     mejor_solucion_global = list(solucion_inicial)
     mejor_costo_global = calcular_costo(mejor_solucion_global, aviones, matriz_tiempos)
     solucion_actual = list(solucion_inicial)
@@ -42,11 +42,12 @@ def tabu_search(solucion_inicial, aviones, matriz_tiempos, tenure=5, max_iter=10
             break
     return mejor_solucion_global, mejor_costo_global
 
+#para probar varias soluciones iniciales, aplica tabu_search a cada una y se queda con la mejor.
 def tabu_search_main(D, aviones, matriz_tiempos, tenure=5, max_iter=100, max_iter_sin_mejora=50, num_seeds_estocastico=10, num_restarts_estocastico=5):
-    """Ejecuta Tabu Search con soluciones iniciales de Greedy Determinista y Estocástico."""
     mejor_solucion_global = None
     mejor_costo_global = float('inf')
-    # Greedy Determinista
+
+    #1. generar greedy determinista
     secuencia_greedy_det, costo_greedy_det, _ = greedy_determinista(D, aviones, matriz_tiempos)
     print(f"Greedy Determinista: Costo = {costo_greedy_det}, Secuencia = {secuencia_greedy_det}")
     costo_verificado = calcular_costo(secuencia_greedy_det, aviones, matriz_tiempos)
@@ -57,14 +58,18 @@ def tabu_search_main(D, aviones, matriz_tiempos, tenure=5, max_iter=100, max_ite
         mejor_costo_global = costo_greedy_det
         mejor_solucion_global = list(secuencia_greedy_det)
         print(f"  Actualización: Nueva mejor solución global (Greedy Determinista) - Costo = {mejor_costo_global}")
-    # Tabu Search desde Greedy Determinista
+
+    # aplicar tabu_search desde la sol del greedy creada
     solucion_tabu_det, costo_tabu_det = tabu_search(secuencia_greedy_det, aviones, matriz_tiempos, tenure, max_iter, max_iter_sin_mejora)
     print(f"Tabu Search (Greedy Determinista): Costo = {costo_tabu_det}, Secuencia = {solucion_tabu_det}")
     if costo_tabu_det < mejor_costo_global:
         mejor_costo_global = costo_tabu_det
         mejor_solucion_global = list(solucion_tabu_det)
         print(f"  Actualización: Nueva mejor solución global (Tabu Search Determinista) - Costo = {mejor_costo_global}")
-    # Greedy Estocástico con reinicios
+    
+    ''' ------------------------------------------------------------------------------------------------------------------------------- '''
+
+    #2. greedy est con reinicios
     print(f"\n--- Resultados Tabu Search (Greedy Estocástico) ---")
     for i in range(num_seeds_estocastico):
         secuencia_greedy_estoc, costo_greedy_estoc, _ = greedy_estocastico(D, aviones, matriz_tiempos, seed=i)

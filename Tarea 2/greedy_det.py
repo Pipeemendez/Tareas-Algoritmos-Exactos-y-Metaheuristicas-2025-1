@@ -1,16 +1,5 @@
 from leer_data import leer_datos_archivo
 
-""" ruta_archivo = 'cases/case1.txt' 
-D, aviones, matriz = leer_datos_archivo(ruta_archivo)
-
-print(f"Número de aviones: {D}")
-print("Primer avión:", aviones[0])
-print("Tiempos de separación del primer avión:", matriz[0])
-
-print("Primer avión:", aviones[1])
-print("Tiempos de separación del segundo avión:", matriz[1]) """
-
-#greedy determinista
 def greedy_determinista(D, aviones, matriz_tiempos):
     secuencia_aterrizaje_indices = []
     tiempos_aterrizaje_programados = [0] * D
@@ -23,18 +12,19 @@ def greedy_determinista(D, aviones, matriz_tiempos):
 
         for i in range(D):
             if i not in secuencia_aterrizaje_indices:
-                # Calcular el tiempo factible más temprano considerando todos los aviones programados
+
+                # se calcula el t factible mas temprano considerando todos los aviones
                 tiempo_factible = aviones[i]['t_temprano']
                 for prev_idx in secuencia_aterrizaje_indices:
                     tiempo_factible = max(tiempo_factible, tiempos_aterrizaje_programados[prev_idx] + matriz_tiempos[prev_idx][i])
 
-                # Si el tiempo factible está dentro del rango permitido
+                # penalizaciones:
                 if tiempo_factible <= aviones[i]['t_tarde']:
                     costo = 0
-                    # Penalización por adelanto
+                    # por adelanto
                     if tiempo_factible < aviones[i]['t_pref']:
                         costo += aviones[i]['pena_temprano'] * (aviones[i]['t_pref'] - tiempo_factible)
-                    # Penalización por retraso
+                    # por retraso
                     elif tiempo_factible > aviones[i]['t_pref']:
                         costo += aviones[i]['pena_tarde'] * (tiempo_factible - aviones[i]['t_pref'])
 
@@ -43,8 +33,8 @@ def greedy_determinista(D, aviones, matriz_tiempos):
                         mejor_avion_indice = i
                         tiempo_aterrizaje_seleccionado = tiempo_factible
 
+        # en caso de no encontrar un avión factible, forzar la selección del primero disponible
         if mejor_avion_indice == -1:
-            # No se encontró un avión factible, forzar la selección del primero disponible
             for i in range(D):
                 if i not in secuencia_aterrizaje_indices:
                     tiempo_factible = aviones[i]['t_temprano']
@@ -67,10 +57,10 @@ def greedy_determinista(D, aviones, matriz_tiempos):
         tiempos_aterrizaje_programados[mejor_avion_indice] = tiempo_aterrizaje_seleccionado
         costo_total += mejor_costo
 
-    # Crear la secuencia de aviones en el orden de aterrizaje
+    # se crea la secuencia de aviones en el orden de aterrizaje
     secuencia_aterrizaje_ordenada = [secuencia_aterrizaje_indices[i] for i in range(D)]
 
-    # Crear la lista de tiempos de aterrizaje en el orden de la secuencia
+    # tiempos de aterrizaje en el mismo orden de la secuencia creada
     tiempos_aterrizaje_ordenados = [tiempos_aterrizaje_programados[i] for i in secuencia_aterrizaje_indices]
 
     return secuencia_aterrizaje_ordenada, costo_total, tiempos_aterrizaje_ordenados
@@ -78,11 +68,10 @@ def greedy_determinista(D, aviones, matriz_tiempos):
 if __name__ == '__main__':
     D, aviones, matriz_tiempos = leer_datos_archivo("cases/case1.txt")
 
-    # Greedy Determinista
     secuencia_det_ordenada, costo_det, tiempos_det_ordenados = greedy_determinista(D, aviones, matriz_tiempos)
-    print("Greedy Determinista - Secuencia:", secuencia_det_ordenada, ", Costo:", costo_det, ", Tiempos de Aterrizaje (ordenados):", tiempos_det_ordenados)
+    print("Greedy Determinista - Secuencia:", secuencia_det_ordenada, ", Costo:", costo_det, ", Tiempos de Aterrizaje:", tiempos_det_ordenados)
 
-    # Verificar tiempos de separación
+    # en caso de que no se cumpla la restriccion, mostrar en consola el error
     for i in range(len(secuencia_det_ordenada) - 1):
         avion1_index = secuencia_det_ordenada[i]
         avion2_index = secuencia_det_ordenada[i+1]
