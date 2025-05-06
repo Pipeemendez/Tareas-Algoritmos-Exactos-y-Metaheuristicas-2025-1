@@ -33,12 +33,15 @@ def calcular_costo(secuencia, aviones, matriz_tiempos):
 
     return costo_total
 
-def generar_vecino_intercambio(solucion):
-    """Genera un vecino intercambiando dos aviones en la secuencia."""
+def generar_vecino_intercambio(solucion, retornar_indices=False):
     vecino = list(solucion)
     idx1, idx2 = random.sample(range(len(vecino)), 2)
     vecino[idx1], vecino[idx2] = vecino[idx2], vecino[idx1]
-    return vecino
+    
+    if retornar_indices:
+        return vecino, (idx1, idx2)
+    else:
+        return vecino
 
 def hill_climbing_alguna_mejora(solucion_inicial, aviones, matriz_tiempos, max_iter_local=100):
     """Implementación del algoritmo Hill Climbing con la estrategia de alguna mejora."""

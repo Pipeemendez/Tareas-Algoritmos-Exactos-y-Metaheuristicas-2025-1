@@ -1,33 +1,7 @@
-import random
 from greedy_det import greedy_determinista
 from greedy_est import greedy_estocastico
 from leer_data import leer_datos_archivo
-
-def calcular_costo(secuencia, aviones, matriz_tiempos):
-    costo_total = 0
-    tiempos_aterrizaje = [0] * len(secuencia)
-    for i, avion_idx in enumerate(secuencia):
-        avion = aviones[avion_idx]
-        tiempo_minimo = avion['t_temprano']
-        for j in range(i):
-            prev_avion_idx = secuencia[j]
-            tiempo_minimo = max(tiempo_minimo, tiempos_aterrizaje[prev_avion_idx] + matriz_tiempos[prev_avion_idx][avion_idx])
-        tiempo_aterrizaje = tiempo_minimo
-        if tiempo_aterrizaje > avion['t_tarde']:
-            return float('inf')
-        tiempo_aterrizaje = min(tiempo_aterrizaje, avion['t_tarde'])
-        tiempos_aterrizaje[avion_idx] = tiempo_aterrizaje
-        if tiempo_aterrizaje < avion['t_pref']:
-            costo_total += (avion['t_pref'] - tiempo_aterrizaje) * avion['pena_temprano']
-        elif tiempo_aterrizaje > avion['t_pref']:
-            costo_total += (tiempo_aterrizaje - avion['t_pref']) * avion['pena_tarde']
-    return costo_total
-
-def generar_vecino_intercambio(solucion):
-    vecino = list(solucion)
-    idx1, idx2 = random.sample(range(len(vecino)), 2)
-    vecino[idx1], vecino[idx2] = vecino[idx2], vecino[idx1]
-    return vecino, (idx1, idx2)
+from HC_alguna_mejora import generar_vecino_intercambio, calcular_costo
 
 def tabu_search(solucion_inicial, aviones, matriz_tiempos, tenure=5, max_iter=100, max_iter_sin_mejora=50):
     """Implementación de Tabu Search."""
@@ -42,7 +16,7 @@ def tabu_search(solucion_inicial, aviones, matriz_tiempos, tenure=5, max_iter=10
         mejor_costo_vecino = float('inf')
         mejor_movimiento = None
         for _ in range(len(solucion_actual)):
-            vecino, movimiento = generar_vecino_intercambio(solucion_actual)
+            vecino, movimiento = generar_vecino_intercambio(solucion_actual, True)
             costo_vecino = calcular_costo(vecino, aviones, matriz_tiempos)
             if movimiento not in lista_tabu or costo_vecino < mejor_costo_global:
                 if costo_vecino < mejor_costo_vecino:
