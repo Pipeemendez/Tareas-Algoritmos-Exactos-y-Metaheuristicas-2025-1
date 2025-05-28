@@ -16,6 +16,9 @@
     <li>
       <a href="https://github.com/Pipeemendez/Tareas-Algoritmos-Exactos-y-Metaheuristicas-2025-1/tree/main/Tarea%202"> <p> Tarea 2: Aterrizaje de aviones</p> </a>
     </li>
+    <li>
+      <a href="https://github.com/Pipeemendez/Tareas-Algoritmos-Exactos-y-Metaheuristicas-2025-1/tree/main/Tarea_3"> <p> Tarea 3: Funciones Multimodales</p> </a>
+    </li>
   </ul>
 </div>
 
