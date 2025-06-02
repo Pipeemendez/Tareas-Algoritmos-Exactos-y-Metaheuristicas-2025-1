@@ -6,34 +6,34 @@ import time
 
 def f1(x):
     # Dominio: [-5, 5]^2
-    # Dimension: 2
+    # Dimensión: 2
     if len(x) != 2:
-        raise ValueError("f1 requires a 2-dimensional vector")
+        raise ValueError("f1 requiere un vector de 2 dimensiones")
     return 4 - 4 * x[0]**3 - 4 * x[0] + x[1]**2
 
 def f2(x):
     # Dominio: [0, 1]^6
-    # Dimension: 6
+    # Dimensión: 6
     # Nota: Esta es la función Esfera (escalada y desplazada), unimodal
     if len(x) != 6:
-        raise ValueError("f2 requires a 6-dimensional vector")
+        raise ValueError("f2 requiere un vector de 6 dimensiones")
     return (1/899.0) * np.sum(x**2) - 1745
 
 def f3(x):
     # Dominio: [-500, 500]^2
-    # Dimension: 2
+    # Dimensión: 2
     if len(x) != 2:
-        raise ValueError("f3 requires a 2-dimensional vector")
+        raise ValueError("f3 requiere un vector de 2 dimensiones")
     return (x[0] + x[1]**4 - 17)**2 + (2 * x[0] + x[1] - 4)**2
 
 def f4(x):
     # Dominio especificado: -2.001 < xi <= 10
     # Dominio efectivo para ln: 2 < xi < 10
-    # Dimension: 10
+    # Dimensión: 10
     # Usaremos un rango ligeramente menor para evitar log(0) o log(negativo)
     # Dominio implementado: [2.0001, 9.9999]
     if len(x) != 10:
-        raise ValueError("f4 requires a 10-dimensional vector")
+        raise ValueError("f4 requiere un vector de 10 dimensiones")
 
     # Penalizar puntos fuera del dominio efectivo (aunque PSO con clamp debería evitarlo)
     # Si se llega aquí con valores inválidos, retornar un valor muy alto
@@ -50,33 +50,33 @@ def f4(x):
 
 # --- Implementación del Algoritmo PSO ---
 
-def pso(objective_func, dim, bounds, num_particles, max_iter, w, c1, c2, max_vel_ratio=0.2):
+def pso(objective_func, dim, bounds, num_particulas, max_iter, w, c1, c2, max_vel_ratio=0.2):
     """
-    Implementación básica de Particle Swarm Optimization.
+    Implementación básica de Particle Swarm Optimization (Optimización por Enjambre de Partículas).
 
     Args:
         objective_func: La función a minimizar.
         dim: Dimensión del problema.
-        bounds: Tupla (lower_bound, upper_bound) para cada dimensión.
-        num_particles: Número de partículas en el enjambre.
+        bounds: Tupla (límite_inferior, límite_superior) para cada dimensión.
+        num_particulas: Número de partículas en el enjambre.
         max_iter: Número máximo de iteraciones.
         w: Parámetro de inercia (o función que devuelve w por iteración).
         c1: Parámetro cognitivo.
         c2: Parámetro social.
-        max_vel_ratio: Ratio para definir la velocidad máxima (max_vel = max_vel_ratio * (upper - lower)).
+        max_vel_ratio: Ratio para definir la velocidad máxima (vel_max = ratio_vel_max * (superior - inferior)).
 
     Returns:
-        Tupla (gbest_position, gbest_value, history):
-            gbest_position: Mejor posición encontrada por el enjambre.
-            gbest_value: Valor de la función en gbest_position.
-            history: Lista de los valores de gbest_value en cada iteración.
+        Tupla (posicion_gbest, valor_gbest, historial):
+            posicion_gbest: Mejor posición encontrada por el enjambre.
+            valor_gbest: Valor de la función en posicion_gbest.
+            historial: Lista de los valores de valor_gbest en cada iteración.
     """
     lower_bound, upper_bound = bounds
     max_velocity = max_vel_ratio * (upper_bound - lower_bound)
 
     # Inicialización
-    positions = lower_bound + (upper_bound - lower_bound) * np.random.rand(num_particles, dim)
-    velocities = (np.random.rand(num_particles, dim) * 2 - 1) * max_velocity # Velocidades iniciales aleatorias
+    positions = lower_bound + (upper_bound - lower_bound) * np.random.rand(num_particulas, dim)
+    velocities = (np.random.rand(num_particulas, dim) * 2 - 1) * max_velocity # Velocidades iniciales aleatorias
 
     pbest_positions = np.copy(positions)
     pbest_values = np.array([objective_func(p) for p in pbest_positions])
@@ -92,7 +92,7 @@ def pso(objective_func, dim, bounds, num_particles, max_iter, w, c1, c2, max_vel
         # Obtener el valor de w para la iteración actual
         current_w = w(iter_count, max_iter) if callable(w) else w
 
-        for i in range(num_particles):
+        for i in range(num_particulas):
             r1 = np.random.rand(dim)
             r2 = np.random.rand(dim)
 
@@ -135,7 +135,7 @@ functions_info = [
     {"name": "f1", "func": f1, "dim": 2, "bounds": (-5, 5)},
     {"name": "f2", "func": f2, "dim": 6, "bounds": (0, 1)},
     {"name": "f3", "func": f3, "dim": 2, "bounds": (-500, 500)},
-    # Usamos bounds ajustados para f4 debido a logaritmos
+    # Usamos límites ajustados para f4 debido a logaritmos
     {"name": "f4", "func": f4, "dim": 10, "bounds": (2.0001, 9.9999)},
 ]
 
@@ -147,13 +147,13 @@ functions_info = [
 # Config 4: Inercia decreciente (exploración inicial, explotación final)
 # Puedes añadir más si quieres
 pso_configs = [
-    {"name": "Config_1_Standard", "w": 0.8, "c1": 2.0, "c2": 2.0, "num_particles": 50, "max_iter": 1000},
-    {"name": "Config_2_MoreExplore", "w": 0.9, "c1": 2.5, "c2": 1.5, "num_particles": 50, "max_iter": 1000},
-    {"name": "Config_3_MoreExploit", "w": 0.7, "c1": 1.5, "c2": 2.5, "num_particles": 50, "max_iter": 1000},
-    # Inercia linealmente decreciente de w_start a w_end
-    {"name": "Config_4_DecreasingW", "w": lambda iter, max_iter: 0.9 - iter * (0.9 - 0.4) / max_iter, "c1": 2.0, "c2": 2.0, "num_particles": 50, "max_iter": 1000},
+    {"name": "Config_1_Estándar", "w": 0.8, "c1": 2.0, "c2": 2.0, "num_particulas": 50, "max_iter": 1000},
+    {"name": "Config_2_MásExploratoria", "w": 0.9, "c1": 2.5, "c2": 1.5, "num_particulas": 50, "max_iter": 1000},
+    {"name": "Config_3_MásExplotadora", "w": 0.7, "c1": 1.5, "c2": 2.5, "num_particulas": 50, "max_iter": 1000},
+    # Inercia linealmente decreciente de w_inicio a w_fin
+    {"name": "Config_4_WDecreciente", "w": lambda iter, max_iter: 0.9 - iter * (0.9 - 0.4) / max_iter, "c1": 2.0, "c2": 2.0, "num_particulas": 50, "max_iter": 1000},
     # Puedes probar otra configuración, e.g., con más partículas o iteraciones
-    # {"name": "Config_5_MoreParticles", "w": 0.8, "c1": 2.0, "c2": 2.0, "num_particles": 100, "max_iter": 1000},
+    # {"name": "Config_5_MásPartículas", "w": 0.8, "c1": 2.0, "c2": 2.0, "num_particulas": 100, "max_iter": 1000},
 ]
 
 num_runs = 10 # Número de ejecuciones por cada función y configuración
@@ -168,12 +168,12 @@ for func_info in functions_info:
     dim = func_info["dim"]
     bounds = func_info["bounds"]
 
-    print(f"Running experiments for function: {func_name} (Dim: {dim})")
+    print(f"Ejecutando experimentos para la función: {func_name} (Dim: {dim})")
     results[func_name] = {}
 
     for config in pso_configs:
         config_name = config["name"]
-        print(f"  Using config: {config_name}")
+        print(f"  Usando configuración: {config_name}")
         run_results = []
         run_histories = []
         start_time = time.time()
@@ -183,7 +183,7 @@ for func_info in functions_info:
                 objective_func=objective_func,
                 dim=dim,
                 bounds=bounds,
-                num_particles=config["num_particles"],
+                num_particulas=config["num_particulas"], # Usar nombre traducido
                 max_iter=config["max_iter"],
                 w=config["w"],
                 c1=config["c1"],
@@ -191,7 +191,7 @@ for func_info in functions_info:
             )
             run_results.append(best_value)
             run_histories.append(history)
-            print(f"    Run {run+1}/{num_runs}: Best value = {best_value:.6f}")
+            print(f"    Ejecución {run+1}/{num_runs}: Mejor valor = {best_value:.6f}")
 
         end_time = time.time()
         mean_best_value = np.mean(run_results)
@@ -205,36 +205,49 @@ for func_info in functions_info:
             "avg_history": avg_history,
             "runtime": end_time - start_time
         }
-        print(f"  Config {config_name} finished in {end_time - start_time:.2f}s. Mean best value: {mean_best_value:.6f} (Std Dev: {std_best_value:.6f})")
+        print(f"  Configuración {config_name} terminada en {end_time - start_time:.2f}s. Mejor valor promedio: {mean_best_value:.6f} (Desv Est: {std_best_value:.6f})")
         print("-" * 20)
 
 # --- Mostrar Resultados y Generar Gráficos ---
 
-print("\n--- Summary of Results ---")
+print("\n--- Resumen de Resultados ---")
 for func_name, func_results in results.items():
-    print(f"\nFunction: {func_name}")
+    print(f"\nFunción: {func_name}")
     plt.figure(figsize=(12, 8))
-    plt.title(f'Convergence Plot for {func_name}')
-    plt.xlabel('Iteration')
-    plt.ylabel('Best Fitness Found (log scale)') # Usar escala logarítmica es común para visualizar convergencia
-    plt.yscale('log') # Escala logarítmica para mejor visualización de la convergencia
+    plt.title(f'Gráfico de Convergencia para {func_name}')
+    plt.xlabel('Iteración')
+    plt.ylabel('Mejor Fitness Encontrado (escala log)') # Usar escala logarítmica es común para visualizar convergencia
+    # La escala logarítmica no funciona con valores negativos o cero.
+    # Si tienes valores <= 0, esta línea generará una advertencia o error.
+    # Considera comentarla si tus mínimos son negativos, o usar escala lineal.
+    # Para f1 y f2 que tienen mínimos negativos, la advertencia es esperable.
+    # Para f3 que tiene mínimo 0, también. Solo f4 podría beneficiarse.
+    # plt.yscale('log') # Descomentar si los valores son todos positivos
 
     for config_name, config_results in func_results.items():
         mean_val = config_results["mean_best_value"]
         std_val = config_results["std_best_value"]
         avg_hist = config_results["avg_history"]
 
-        print(f"  Config: {config_name}")
-        print(f"    Mean Best Value: {mean_val:.6f}")
-        print(f"    Standard Deviation: {std_val:.6f}")
-        print(f"    Runtime (10 runs): {config_results['runtime']:.2f}s")
+        print(f"  Configuración: {config_name}")
+        print(f"    Mejor Valor Promedio: {mean_val:.6f}")
+        print(f"    Desviación Estándar: {std_val:.6f}")
+        print(f"    Tiempo de ejecución (10 ejecuciones): {config_results['runtime']:.2f}s")
 
-        plt.plot(avg_hist, label=f'{config_name} (Mean: {mean_val:.2e})') # Usar notación científica para valores pequeños
+        # Ajustar escala log si es necesario, solo si todos los valores en avg_hist son > 0
+        if np.all(np.array(avg_hist) > 0):
+             plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})') # Usar notación científica para valores pequeños
+        else:
+             # Si hay valores <= 0, graficar en escala lineal y ajustar la etiqueta del eje Y si se había puesto log
+             plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})')
+             plt.yscale('linear') # Asegurarse de que es lineal
+             plt.ylabel('Mejor Fitness Encontrado') # Cambiar etiqueta del eje Y
+
 
     plt.legend()
     plt.grid(True, which="both", ls="--")
-    plt.savefig(f'convergence_plot_{func_name}.png') # Guardar el gráfico
+    plt.savefig(f'grafico_convergencia_{func_name}.png') # Guardar el gráfico
     # plt.show() # Descomentar para mostrar los gráficos inmediatamente
 
-print("\nExperimentation complete. Convergence plots saved as .png files.")
-print("Review the saved plots and the summary results above for analysis.")
+print("\nExperimentación completa. Los gráficos de convergencia han sido guardados como archivos .png.")
+print("Revisa los gráficos guardados y el resumen de resultados para el análisis.")
