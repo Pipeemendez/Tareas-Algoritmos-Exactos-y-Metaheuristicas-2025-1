@@ -3,49 +3,33 @@ import matplotlib.pyplot as plt
 import time
 
 # --- Definición de las Funciones Objetivo ---
-
 def f1(x):
-    # Dominio: [-5, 5]^2
-    # Dimensión: 2
     if len(x) != 2:
         raise ValueError("f1 requiere un vector de 2 dimensiones")
     return 4 - 4 * x[0]**3 - 4 * x[0] + x[1]**2
 
 def f2(x):
-    # Dominio: [0, 1]^6
-    # Dimensión: 6
-    # Nota: Esta es la función Esfera (escalada y desplazada), unimodal
     if len(x) != 6:
         raise ValueError("f2 requiere un vector de 6 dimensiones")
     return (1/899.0) * np.sum(x**2) - 1745
 
 def f3(x):
-    # Dominio: [-500, 500]^2
-    # Dimensión: 2
     if len(x) != 2:
         raise ValueError("f3 requiere un vector de 2 dimensiones")
     return (x[0] + x[1]**4 - 17)**2 + (2 * x[0] + x[1] - 4)**2
 
 def f4(x):
-    # Dominio especificado: -2.001 < xi <= 10
-    # Dominio efectivo para ln: 2 < xi < 10
-    # Dimensión: 10
-    # Usaremos un rango ligeramente menor para evitar log(0) o log(negativo)
-    # Dominio implementado: [2.0001, 9.9999]
     if len(x) != 10:
         raise ValueError("f4 requiere un vector de 10 dimensiones")
 
     # Penalizar puntos fuera del dominio efectivo (aunque PSO con clamp debería evitarlo)
     # Si se llega aquí con valores inválidos, retornar un valor muy alto
     if np.any(x <= 2.0) or np.any(x >= 10.0):
-         return np.inf # Infinito positivo
+        return np.inf # Infinito positivo
 
     sum_terms = np.sum((np.log(x - 2))**2 + (np.log(10 - x))**2)
     prod_term = np.prod(x)
 
-    # Para el prod_term**0.2, si prod_term es negativo, el resultado real no está definido.
-    # Dado el dominio (2, 10), todos los x_i son positivos, por lo que el producto siempre es positivo.
-    # Si el dominio fuera diferente, habría que manejar esta parte (e.g., retornar inf).
     return sum_terms - (prod_term**0.2)
 
 # --- Implementación del Algoritmo PSO ---
@@ -148,8 +132,8 @@ functions_info = [
 # Puedes añadir más si quieres
 pso_configs = [
     {"name": "Config_1_Estándar", "w": 0.8, "c1": 2.0, "c2": 2.0, "num_particulas": 50, "max_iter": 1000},
-    {"name": "Config_2_MásExploratoria", "w": 0.9, "c1": 2.5, "c2": 1.5, "num_particulas": 50, "max_iter": 1000},
-    {"name": "Config_3_MásExplotadora", "w": 0.7, "c1": 1.5, "c2": 2.5, "num_particulas": 50, "max_iter": 1000},
+    {"name": "Config_2_Más_Exploratoria", "w": 0.9, "c1": 2.5, "c2": 1.5, "num_particulas": 50, "max_iter": 1000},
+    {"name": "Config_3_Más_Explotadora", "w": 0.7, "c1": 1.5, "c2": 2.5, "num_particulas": 50, "max_iter": 1000},
     # Inercia linealmente decreciente de w_inicio a w_fin
     {"name": "Config_4_WDecreciente", "w": lambda iter, max_iter: 0.9 - iter * (0.9 - 0.4) / max_iter, "c1": 2.0, "c2": 2.0, "num_particulas": 50, "max_iter": 1000},
     # Puedes probar otra configuración, e.g., con más partículas o iteraciones
@@ -205,7 +189,7 @@ for func_info in functions_info:
             "avg_history": avg_history,
             "runtime": end_time - start_time
         }
-        print(f"  Configuración {config_name} terminada en {end_time - start_time:.2f}s. Mejor valor promedio: {mean_best_value:.6f} (Desv Est: {std_best_value:.6f})")
+        print(f"  Configuración {config_name} terminada en {end_time - start_time:.2f}s. Mejor valor promedio: {mean_best_value:.6f} (Desviación Estándar: {std_best_value:.6f})")
         print("-" * 20)
 
 # --- Mostrar Resultados y Generar Gráficos ---
@@ -217,12 +201,6 @@ for func_name, func_results in results.items():
     plt.title(f'Gráfico de Convergencia para {func_name}')
     plt.xlabel('Iteración')
     plt.ylabel('Mejor Fitness Encontrado (escala log)') # Usar escala logarítmica es común para visualizar convergencia
-    # La escala logarítmica no funciona con valores negativos o cero.
-    # Si tienes valores <= 0, esta línea generará una advertencia o error.
-    # Considera comentarla si tus mínimos son negativos, o usar escala lineal.
-    # Para f1 y f2 que tienen mínimos negativos, la advertencia es esperable.
-    # Para f3 que tiene mínimo 0, también. Solo f4 podría beneficiarse.
-    # plt.yscale('log') # Descomentar si los valores son todos positivos
 
     for config_name, config_results in func_results.items():
         mean_val = config_results["mean_best_value"]
@@ -236,12 +214,12 @@ for func_name, func_results in results.items():
 
         # Ajustar escala log si es necesario, solo si todos los valores en avg_hist son > 0
         if np.all(np.array(avg_hist) > 0):
-             plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})') # Usar notación científica para valores pequeños
+            plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})') # Usar notación científica para valores pequeños
         else:
-             # Si hay valores <= 0, graficar en escala lineal y ajustar la etiqueta del eje Y si se había puesto log
-             plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})')
-             plt.yscale('linear') # Asegurarse de que es lineal
-             plt.ylabel('Mejor Fitness Encontrado') # Cambiar etiqueta del eje Y
+            # Si hay valores <= 0, graficar en escala lineal y ajustar la etiqueta del eje Y si se había puesto log
+            plt.plot(avg_hist, label=f'{config_name} (Promedio: {mean_val:.2e})')
+            plt.yscale('linear') # Asegurarse de que es lineal
+            plt.ylabel('Mejor Fitness Encontrado') # Cambiar etiqueta del eje Y
 
 
     plt.legend()
