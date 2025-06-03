@@ -37,12 +37,12 @@ def pso(objective_func, dim, bounds, num_particulas, max_iter, w, c1, c2, max_ve
     positions = lower_bound + (upper_bound - lower_bound) * np.random.rand(num_particulas, dim)
     velocities = (np.random.rand(num_particulas, dim) * 2 - 1) * max_velocity
 
-    lbest_positions = np.copy(positions)
-    lbest_values = np.array([objective_func(p) for p in lbest_positions])
+    pbest_positions = np.copy(positions)
+    pbest_values = np.array([objective_func(p) for p in pbest_positions])
 
-    gbest_index = np.argmin(lbest_values)
-    gbest_position = np.copy(lbest_positions[gbest_index])
-    gbest_value = lbest_values[gbest_index]
+    gbest_index = np.argmin(pbest_values)
+    gbest_position = np.copy(pbest_positions[gbest_index])
+    gbest_value = pbest_values[gbest_index]
 
     history = [gbest_value]
 
@@ -55,7 +55,7 @@ def pso(objective_func, dim, bounds, num_particulas, max_iter, w, c1, c2, max_ve
             r2 = np.random.rand(dim)
 
             # Actualizar velocidad
-            cognitive_velocity = c1 * r1 * (lbest_positions[i] - positions[i])
+            cognitive_velocity = c1 * r1 * (pbest_positions[i] - positions[i])
             social_velocity = c2 * r2 * (gbest_position - positions[i])
             velocities[i] = current_w * velocities[i] + cognitive_velocity + social_velocity
 
@@ -72,15 +72,15 @@ def pso(objective_func, dim, bounds, num_particulas, max_iter, w, c1, c2, max_ve
             current_value = objective_func(positions[i])
 
             # Actualizar pbest
-            if current_value < lbest_values[i]:
-                lbest_values[i] = current_value
-                lbest_positions[i] = np.copy(positions[i])
+            if current_value < pbest_values[i]:
+                pbest_values[i] = current_value
+                pbest_positions[i] = np.copy(positions[i])
 
         # Actualizar gbest
-        best_lbest_index = np.argmin(lbest_values)
-        if lbest_values[best_lbest_index] < gbest_value:
-            gbest_value = lbest_values[best_lbest_index]
-            gbest_position = np.copy(lbest_positions[best_lbest_index])
+        best_pbest_index = np.argmin(pbest_values)
+        if pbest_values[best_pbest_index] < gbest_value:
+            gbest_value = pbest_values[best_pbest_index]
+            gbest_position = np.copy(pbest_positions[best_pbest_index])
 
         history.append(gbest_value)
     return gbest_position, gbest_value, history
