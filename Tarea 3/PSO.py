@@ -14,7 +14,7 @@ def f2(x):
 def f3(x):
     if len(x) != 2:
         raise ValueError("f3 requiere un vector de 2 dimensiones")
-    return (x[0] + x[1]**4 - 17)**2 + (2 * x[0] + x[1] - 4)**2
+    return (x[0]**6 + x[1]**4 - 17)**2 + (2 * x[0] + x[1] - 4)**2
 
 def f4(x):
     if len(x) != 10:
