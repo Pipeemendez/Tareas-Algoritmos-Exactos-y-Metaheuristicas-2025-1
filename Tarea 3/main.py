@@ -8,10 +8,10 @@ resultados = {}
 for funcion_info in info_funciones_objetivo:
     funcion_nombre = funcion_info["name"]
     funcion_objetivo = funcion_info["func"]
-    dim = funcion_info["dim"]
+    grado = funcion_info["grado"]
     bounds = funcion_info["bounds"]
 
-    print(f"EJECUTANDO EXPERIMENTO PARA LA FUNCIÓN: {funcion_nombre} (Dim: {dim})")
+    print(f"EJECUTANDO EXPERIMENTO PARA LA FUNCIÓN: {funcion_nombre} (Grado: {grado})")
     resultados[funcion_nombre] = {}
 
     for config in parametros:
@@ -24,7 +24,7 @@ for funcion_info in info_funciones_objetivo:
         for ejecucion in range(num_ejecuciones):
             _, best_value, history = pso(
                 objective_func=funcion_objetivo,
-                dim=dim,
+                grado=grado,
                 bounds=bounds,
                 num_particulas=config["num_particulas"],
                 max_iter=config["max_iter"],
