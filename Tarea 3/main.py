@@ -11,7 +11,7 @@ for funcion_info in info_funciones_objetivo:
     grado = funcion_info["grado"]
     bounds = funcion_info["bounds"]
 
-    print(f"EJECUTANDO EXPERIMENTO PARA LA FUNCIÓN: {funcion_nombre} (Grado: {grado})")
+    print(f"EJECUTANDO EXPERIMENTO PARA LA FUNCIÓN: {funcion_nombre}")
     resultados[funcion_nombre] = {}
 
     for config in parametros:
