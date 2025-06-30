@@ -252,9 +252,8 @@ def evaluate_final_model(best_individual, X_train, X_test, y_train, y_test, orig
 # --- Main Execution ---
 
 if __name__ == "__main__":
-    # IMPORTANT: Download the datasets first
-    train_file = './UNSW_NB15_training-set.csv' # <--- ACTUALIZA ESTA RUTA
-    test_file = './UNSW_NB15_testing-set.csv'   # <--- ACTUALIZA ESTA RUTA
+    train_file = 'Tarea 4/UNSW_NB15_training-set.csv' 
+    test_file = 'Tarea 4/UNSW_NB15_testing-set.csv' 
 
     import os
     if not os.path.exists(train_file) or not os.path.exists(test_file):
